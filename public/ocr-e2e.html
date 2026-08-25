@@ -1,33 +1,24 @@
 <!doctype html><html lang="zh"><head><meta charset="utf-8"><title>OCR e2e</title></head>
 <body style="font-family:sans-serif">
-<canvas id="c" width="760" height="280"></canvas>
 <pre id="out">RUNNING</pre>
 <script type="module">
-import Tesseract from '/kaoyan-workbench/vendor/ocr/tesseract.esm.min.js'  // 会被部署为 vendor 内
+import Tesseract from '/kaoyan-workbench/vendor/ocr/tesseract.esm.min.js'
 const out = document.getElementById('out')
-const c = document.getElementById('c')
-const ctx = c.getContext('2d')
-ctx.fillStyle = '#fff'; ctx.fillRect(0,0,760,280)
-ctx.fillStyle = '#000'; ctx.font = '42px "SimHei","Microsoft YaHei",sans-serif'
-ctx.fillText('极限的运算法则', 50, 90)
-ctx.fillText('lim (1+1/x)^x = e', 70, 170)
-ctx.fillText('sin(x)/x 的极限是 1', 70, 240)
-const blob = await new Promise(r => c.toBlob(r, 'image/png'))
-const url = URL.createObjectURL(blob)
+const step = (s) => { out.textContent = s; console.log('[ocr-e2e]', s) }
 try {
-  out.textContent = '加载 worker...'
+  step('import ok')
   const w = await Tesseract.createWorker('chi_sim+eng', 1, {
     workerPath: 'https://wangzekai615.github.io/kaoyan-workbench/vendor/ocr/worker.min.js',
     corePath: 'https://wangzekai615.github.io/kaoyan-workbench/vendor/ocr/tesseract-core-simd.wasm.js',
     langPath: 'https://wangzekai615.github.io/kaoyan-workbench/vendor/ocr/',
-    logger: m => {},
+    logger: m => console.log('[ocr-e2e logger]', JSON.stringify(m)),
   })
-  out.textContent = '识别中...'
-  const res = await w.recognize(url)
-  out.textContent = 'RESULT:\n' + (res.data.text || '(empty)')
+  step('worker created')
+  const res = await w.recognize('https://wangzekai615.github.io/kaoyan-workbench/icons/icon-192.png')
+  step('RESULT:\n' + (res.data.text || '(empty)'))
   await w.terminate()
 } catch (e) {
-  out.textContent = 'ERROR:\n' + (e && e.message ? e.message : String(e)).slice(0,300)
+  step('ERROR:\n' + ((e && e.stack) || String(e)).slice(0,400))
 }
 </script>
 </body></html>
