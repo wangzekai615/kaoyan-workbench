@@ -79,6 +79,8 @@ function goto(opts) {
   if (opts.view !== state.view) keepScroll()
   state.view = opts.view
   if (opts.filter) state.filter[opts.view] = opts.filter
+  // 学习计划：记录要查看的科目
+  if (opts.subject) state.subject = opts.subject
   render()
 }
 
