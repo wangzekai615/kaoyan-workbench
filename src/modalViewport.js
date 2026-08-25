@@ -6,12 +6,6 @@ let activeListener = null
 export function fitModalMask(maskEl) {
   const modal = maskEl ? maskEl.querySelector('.modal') : null
   if (!modal) return
-  // iOS 检测：真机 Home 条/键盘场景，给按钮区额外底部空间
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '')
-  const actions = modal.querySelector('.modal-actions')
-  if (isIOS && actions) {
-    actions.style.paddingBottom = 'max(24px, env(safe-area-inset-bottom, 24px))'
-  }
   applyHeight()
 
   function applyHeight() {
