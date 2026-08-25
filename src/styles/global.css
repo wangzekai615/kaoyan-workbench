@@ -298,7 +298,8 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 .modal .modal-actions {
-  padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 34px));
+  /* max(): 至少 20px 底部空间，真机叠加 safe-area（iPhone Home条 34px） */
+  padding: 14px 18px max(20px, env(safe-area-inset-bottom, 20px));
   flex-shrink: 0;
   border-top: 1px solid var(--line);
   background: #fff;
