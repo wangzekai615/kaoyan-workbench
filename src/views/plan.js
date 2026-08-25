@@ -1,10 +1,10 @@
 // 学习计划页：展示某科目按顺序的阶段任务，可逐项勾选「完成」
 // 某阶段全部完成 → 自动为该科今日打卡（home 会联动显示）
 import { $, esc, today } from '../utils.js'
-import { state, toggleTask, taskId, isTaskDone } from '../state.js'
+import { state, toggleTask, taskId, isTaskDone, resetSubjectTasks } from '../state.js'
 import { getPlan, CATEGORY_TIPS, currentStageIndex } from '../plans.js'
 import { SUBJECTS } from '../config.js'
-import { getSettings, remainingDays, newWordsForDate, reviewWordsForDate, VOCAB_SIZE } from '../vocabPlan.js'
+import { getSettings, remainingDays, newWordsForDate, reviewWordsForDate } from '../vocabPlan.js'
 import { EXAM_DATE } from '../config.js'
 
 export function planHTML(subjectKey) {
@@ -26,11 +26,12 @@ export function planHTML(subjectKey) {
         .map((task, ti) => {
           const tid = taskId(subjectKey, si, ti)
           const done = isTaskDone(subjectKey, si, ti)
-          return `<label class="task-row" data-subj="${subjectKey}" data-si="${si}" data-ti="${ti}">
+          return `<label class="task-row" data-subj="${subjectKey}" data-si="${si}" data-ti="${ti}" role="button">
             <span class="cb ${done ? 'on' : ''}">${done ? '✓' : ''}</span>
             <span class="task-t ${done ? 'done' : ''}">
               <b>${esc(task.t)}</b>
               ${task.tip ? `<span class="tip">💡 ${esc(task.tip)}</span>` : ''}
+              <span class="task-toggle-hint">${done ? '✔ 已完成 · 点此取消' : '点击标记完成'}</span>
             </span>
           </label>`
         })
@@ -87,9 +88,12 @@ export function planHTML(subjectKey) {
       <div style="margin-top:10px;font-size:13px;background:#eef0f6;border-radius:10px;padding:10px;color:#454a5a;white-space:pre-wrap">${esc(plan.note)}</div>
     </div>
 
-    <div style="padding:6px 16px 4px;font-weight:700;font-size:15px">分阶段任务</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 16px 4px">
+      <div style="font-weight:700;font-size:15px">分阶段任务</div>
+      <button class="btn danger" id="plan-reset" style="padding:6px 12px;font-size:12px">🔁 重置进度</button>
+    </div>
     <div style="margin-top:2px">${stageHtml}</div>
-    <div class="foot-note">今天完成该科任务 → 自动在首页打卡 ✔</div>
+    <div class="foot-note">点任务可勾选/取消完成 · 完成即自动在首页打卡 ✔</div>
   </div>`
 }
 
@@ -101,18 +105,32 @@ export function planBind(root, rerender) {
     const vocabEntry = e.target.closest('#vocab-entry')
     if (vocabEntry) { rerender({ view: 'vocab' }); return }
 
+    const reset = e.target.closest('#plan-reset')
+    if (reset) {
+      // 从任一任务行取当前科目
+      const subj = root.querySelector('.task-row')?.dataset?.subj
+      const subjName = (SUBJECTS.find((s) => s.key === subj) || {}).name || '该科目'
+      if (confirm(`确定重置「${subjName}」的全部任务进度？\n已完成记录会清零，今日打卡也会取消。`)) {
+        resetSubjectTasks(subj)
+        rerender({ view: 'plan', subject: subj })
+      }
+      return
+    }
+
     const row = e.target.closest('.task-row')
     if (row) {
       const { subj, si, ti } = row.dataset
       toggleTask(subj, Number(si), Number(ti))
-      // 局部刷新勾选态 + 进度，不用整页刷新
+      // 局部刷新勾选态 + 进度 + 提示文字，不用整页刷新
       const tid = taskId(subj, Number(si), Number(ti))
       const done = isTaskDone(subj, Number(si), Number(ti))
       const cb = row.querySelector('.cb')
       const tt = row.querySelector('.task-t')
+      const hint = row.querySelector('.task-toggle-hint')
       cb.className = 'cb' + (done ? ' on' : '')
       cb.textContent = done ? '✓' : ''
       tt.className = 'task-t' + (done ? ' done' : '')
+      if (hint) hint.textContent = done ? '✔ 已完成 · 点此取消' : '点击标记完成'
       updateStageProgress(row)
       return
     }

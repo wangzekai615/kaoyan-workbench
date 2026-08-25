@@ -90,6 +90,21 @@ export function isTaskDone(subject, stageIdx, taskIdx) {
   return !!state.taskDone[subject]?.[taskId(subject, stageIdx, taskIdx)]
 }
 
+// 学习计划：重置某科目全部任务完成进度（并同步取消该科今日打卡）
+export function resetSubjectTasks(subject) {
+  // 无条件清空该科任务进度
+  if (state.taskDone[subject]) {
+    delete state.taskDone[subject]
+    if (!Object.keys(state.taskDone).length) state.taskDone = {}
+  }
+  // 同时撤掉该科今日打卡（任务清零 → 不应再显示已打卡）
+  if (state.checkins[today()] && state.checkins[today()][subject]) {
+    delete state.checkins[today()][subject]
+    if (!Object.keys(state.checkins[today()]).length) delete state.checkins[today()]
+  }
+  persistAll()
+}
+
 export function addNote(note) {
   state.notes.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ts: Date.now(), ...note })
   persistAll()
