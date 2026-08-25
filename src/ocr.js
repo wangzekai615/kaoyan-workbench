@@ -22,6 +22,7 @@ function getWorker() {
       workerPath: WORKER_URL,
       corePath: CORE_URL,
       langPath: LANG_PATH,
+      workerBlobURL: false, // 直接用完整 URL 建 Worker，避免 blob worker 的 importScripts 问题
       logger: () => {},
     })
   }
