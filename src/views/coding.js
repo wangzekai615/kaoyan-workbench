@@ -1,7 +1,9 @@
 // 刷题记录：力扣/牛客/其他，总览统计 + 本周分布 + 标签分布 + 待重做 + 记录增删筛选
 import { $, esc, today, toast } from '../utils.js'
-import { state, addCoding, delCoding } from '../state.js'
+import { state, addCoding, delCoding, newImgId } from '../state.js'
 import { openModalMask, closeModalMask } from '../modalViewport.js'
+import { saveImage, deleteImage, getImage, compressImage } from '../imgstore.js'
+import { ocrImage } from '../ocr.js'
 
 const TAGS = ['数组', '链表', '树', '图', '动态规划', '贪心', '回溯', '字符串', '哈希', '其他']
 const STATUS = { todo: '待重做', ok: '已掌握', star: '⭐ 经典' }
@@ -51,6 +53,7 @@ export function codingHTML(filter = 'all') {
           <span class="tag" style="background:${x.tag ? '#ffe9d6' : '#eef0f6'};color:#b06b1f">${esc(x.tag || '未分类')}</span>
           ${x.date} · <button class="btn ghost act" data-act="del" data-id="${x.id}" style="padding:2px 8px;font-size:11px">删除</button>
         </span>
+        ${x.imgId ? `<div class="note-imgbox cd-imgbox" data-imgid="${x.imgId}"></div>` : ''}
       </div>`).join('')
     : '<div class="empty">这个分类还没有题，去刷一道吧 💪</div>'
 
@@ -139,6 +142,15 @@ export function codingHTML(filter = 'all') {
             <div class="field" style="width:88px;flex:none"><label>题号</label><input id="cd-pid" placeholder="1" inputmode="numeric" /></div>
           </div>
           <div class="field"><label>题目</label><input id="cd-title" placeholder="如：两数之和" /></div>
+          <div class="field"><label>题目照片（可拍照或从相册选）</label>
+            <div class="img-pick">
+              <label class="btn ghost pick-btn">📷 拍照<input type="file" accept="image/*" capture="environment" id="cd-photo" hidden /></label>
+              <label class="btn ghost pick-btn">🖼 相册<input type="file" accept="image/*" id="cd-album" hidden /></label>
+              <button class="btn ghost pick-btn" id="cd-ocr" type="button" disabled>🔍 识别文字</button>
+            </div>
+            <div id="cd-preview" class="preview hidden"><img id="cd-preview-img" alt="预览" /><button class="btn danger" id="cd-preview-del">移除</button></div>
+            <div class="ocr-progress hidden" id="cd-ocr-prog">识别中 <span id="cd-ocr-pct">0%</span><div class="ocr-progbar"><i id="cd-ocr-bar"></i></div></div>
+          </div>
           <div class="field"><label>分类</label>
             <select id="cd-tag">${TAGS.map((t) => `<option>${t}</option>`).join('')}</select>
           </div>
@@ -182,16 +194,82 @@ export function codingBind(root, rerender) {
     if (add) open()
     else if (chip) rerender({ view: 'coding', filter: chip.dataset.filter })
     else if (del) {
+      const item = state.coding.find((c) => c.id === del.dataset.id)
+      if (item && item.imgId) deleteImage(item.imgId)   // 顺带删图
       delCoding(del.dataset.id)
       rerender({ view: 'coding', filter: currentFilter() })
     }
   })
 
   $('#cd-cancel', root).addEventListener('click', close)
-  $('#cd-save', root).addEventListener('click', () => {
+
+  // ---------- 拍照 / OCR ----------
+  let pendingImg = null
+  const photoInp = $('#cd-photo', root)
+  const albumInp = $('#cd-album', root)
+  const previewBox = $('#cd-preview', root)
+  const previewImg = $('#cd-preview-img', root)
+  const ocrBtn = $('#cd-ocr', root)
+  const ocrProg = $('#cd-ocr-prog', root)
+  const ocrPct = $('#cd-ocr-pct', root)
+  const ocrBar = $('#cd-ocr-bar', root)
+
+  function resetPicker() {
+    previewBox.classList.add('hidden')
+    previewImg.removeAttribute('src')
+    ocrProg.classList.add('hidden')
+    ocrPct.textContent = '0%'
+    ocrBar.style.width = '0%'
+    ocrBtn.disabled = true
+  }
+
+  async function onPickFile(file) {
+    if (!file) return
+    try {
+      const { blob, dataUrl } = await compressImage(file)
+      pendingImg = { imgId: newImgId(), blob, dataUrl }
+      previewBox.classList.remove('hidden')
+      previewImg.src = dataUrl
+      ocrBtn.disabled = false
+      toast('已读取照片')
+    } catch (e) {
+      toast('照片读取失败')
+    }
+  }
+
+  photoInp.addEventListener('change', () => onPickFile(photoInp.files[0]))
+  albumInp.addEventListener('change', () => onPickFile(albumInp.files[0]))
+  $('#cd-preview-del', root).addEventListener('click', () => {
+    if (pendingImg && pendingImg.imgId) deleteImage(pendingImg.imgId)
+    pendingImg = null
+    resetPicker()
+  })
+  ocrBtn.addEventListener('click', async () => {
+    if (!pendingImg) return
+    ocrBtn.disabled = true
+    ocrProg.classList.remove('hidden')
+    const text = await ocrImage(pendingImg.dataUrl || pendingImg.blob, (pct) => {
+      ocrPct.textContent = pct + '%'
+      ocrBar.style.width = pct + '%'
+    })
+    ocrProg.classList.add('hidden')
+    ocrBtn.disabled = false
+    if (text) {
+      $('#cd-title', root).value = text.split('\n')[0].slice(0, 50)   // 首行作题目
+      toast('识别完成，已填入题目（可改）')
+    }
+  })
+
+  $('#cd-save', root).addEventListener('click', async () => {
     const title = $('#cd-title', root).value.trim()
     const pid = $('#cd-pid', root).value.trim()
     if (!title && !pid) { alert('请填写题目或题号'); return }
+    // 图片处理
+    let imgId = null
+    if (pendingImg && pendingImg.blob) {
+      imgId = pendingImg.imgId
+      await saveImage(imgId, pendingImg.blob)
+    }
     addCoding({
       source: $('#cd-source', root).value,
       pid,
@@ -199,8 +277,26 @@ export function codingBind(root, rerender) {
       tag: $('#cd-tag', root).value,
       status: $('#cd-status', root).value,
       date: today(),
+      ...(imgId ? { imgId } : {}),
     })
+    resetPicker()
     close()
     rerender({ view: 'coding', filter: currentFilter() })
+  })
+
+  // 渲染列表里的题图
+  requestAnimationFrame(() => {
+    root.querySelectorAll('.cd-imgbox').forEach((box) => {
+      const imgId = box.dataset.imgid
+      getImage(imgId).then((blob) => {
+        if (!blob) return
+        const url = URL.createObjectURL(blob)
+        const im = document.createElement('img')
+        im.src = url
+        im.className = 'note-img'
+        im.addEventListener('click', () => window.open(url))
+        box.appendChild(im)
+      })
+    })
   })
 }
