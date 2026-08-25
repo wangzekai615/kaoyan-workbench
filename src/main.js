@@ -26,55 +26,84 @@ const TABS = [
   { id: 'stats', label: '统计', icon: '📊' },
 ]
 
-const state = { view: 'home', filter: {}, lastPos: null }
+const state = { view: 'home', filter: {}, lastPos: null, anim: 'next' }  // anim: next|prev|up|none
+
+const buildHTML = (v) => {
+  switch (v) {
+    case 'home': return homeHTML()
+    case 'plan': return planHTML(state.subject || 'math')
+    case 'vocab': return vocabHTML()
+    case 'timer': return timerHTML()
+    case 'notes': return notesHTML(state.filter.notes)
+    case 'coding': return codingHTML(state.filter.coding)
+    case 'stats': return statsHTML()
+    default: return ''
+  }
+}
 
 function render() {
   const v = state.view
-  let html = ''
-  switch (v) {
-    case 'home': html = homeHTML(); break
-    case 'plan': html = planHTML(state.subject || 'math'); break
-    case 'vocab': html = vocabHTML(); break
-    case 'timer': html = timerHTML(); break
-    case 'notes': html = notesHTML(state.filter.notes); break
-    case 'coding': html = codingHTML(state.filter.coding); break
-    case 'stats': html = statsHTML(); break
+  const anim = state.anim || 'next'
+  const html = buildHTML(v)
+
+  // —— 旧页面离场动画 ——
+  const oldPage = app.querySelector('.page')
+  if (oldPage && anim !== 'none') {
+    const leaveClass = anim === 'up' ? 'page-leave-down' : (anim === 'rev' ? 'page-leave-prev' : 'page-leave-next')
+    oldPage.classList.remove('page-enter-next', 'page-enter-prev', 'page-enter-up')
+    oldPage.classList.add(leaveClass)
   }
-  app.innerHTML = html + navHTML()
+  // 底部导航立即更新（不参与过渡）
+  app.querySelectorAll('.bottom-nav').forEach((n) => n.remove())
+  app.insertAdjacentHTML('beforeend', navHTML())
 
-  const root = app
-  // 记住滚动位置
-  const page = root.querySelector('.page')
-  if (page && state.lastPos !== null) { page.scrollTop = state.lastPos }
+  // 延迟插入新页面，让旧页离场先播放一半（更快，避免两段都吃满时长）
+  const delay = oldPage && anim !== 'none' ? 70 : 0
+  setTimeout(() => {
+    // 移除旧页面（不含 nav）
+    app.querySelectorAll('.page').forEach((n) => n.remove())
 
-  bindNav(root)
-  switch (v) {
-    case 'home': homeBind(root, (next) => goto(next)); break
-    case 'plan': planBind(root, (next) => goto(next)); break
-    case 'vocab': vocabBind(root, (next) => goto(next)); break
-    case 'timer': timerBind(root); break
-    case 'notes': notesBind(root, (next) => goto(next)); break
-    case 'coding': codingBind(root, (next) => goto(next)); break
-    case 'stats': statsBind(root); break
-  }
-  swipeTab(root, (dir) => tapTab(nextTab(dir)))
+    const newRoot = document.createElement('div')
+    newRoot.innerHTML = html.trim() ? html : '<div class="page"></div>'
+    const pageEl = newRoot.querySelector('.page') || newRoot.children[0]
+    if (pageEl) {
+      const enterClass = anim === 'up' ? 'page-enter-up' : (anim === 'rev' ? 'page-enter-prev' : 'page-enter-next')
+      pageEl.classList.add(enterClass)
+    }
+    // 保持滚动
+    if (state.lastPos !== null) pageEl && (pageEl.scrollTop = state.lastPos)
 
-  // 下拉刷新：所有带 .page 的视图都可下拉重载当前页
-  const p = root.querySelector('.page')
-  if (p && v !== 'timer') {
-    attachPullRefresh(p, (done) => {
-      // 重新 loadAll + 重渲染当前视图（保持用户所在位置）
-      const target = v
-      keepScroll()
-      refreshSW().then(() => {
-        renderPreservingView(target)
-        done()
-        if (navigator.vibrate) navigator.vibrate(30)
+    app.prepend(newRoot.children[0] || newRoot)
+    const root = app
+
+    bindNav(root)
+    switch (v) {
+      case 'home': homeBind(root, (next) => goto(next)); break
+      case 'plan': planBind(root, (next) => goto(next)); break
+      case 'vocab': vocabBind(root, (next) => goto(next)); break
+      case 'timer': timerBind(root); break
+      case 'notes': notesBind(root, (next) => goto(next)); break
+      case 'coding': codingBind(root, (next) => goto(next)); break
+      case 'stats': statsBind(root); break
+    }
+    swipeTab(root, (dir) => tapTab(nextTab(dir)))
+
+    // 下拉刷新
+    const p = root.querySelector('.page')
+    if (p && v !== 'timer') {
+      attachPullRefresh(p, (done) => {
+        const target = v
+        keepScroll()
+        refreshSW().then(() => {
+          state.anim = 'none'
+          renderPreservingView(target)
+          state.anim = 'next'
+          done()
+          if (navigator.vibrate) navigator.vibrate(30)
+        })
       })
-    })
-  }
-
-  return root
+    }
+  }, delay)
 }
 
 function navHTML() {
@@ -93,8 +122,20 @@ function bindNav(root) {
   })
 }
 
+const DETAIL_VIEWS = ['plan', 'vocab']  // 详情页（从底部进入）
+
 function goto(opts) {
   if (opts.view !== state.view) keepScroll()
+  if (opts.view === state.view) {
+    // 同视图刷新（如筛选切换）用淡入淡出
+    state.anim = 'none'
+  } else if (DETAIL_VIEWS.includes(opts.view)) {
+    state.anim = 'up'          // 进入详情：从下往上
+  } else if (DETAIL_VIEWS.includes(state.view)) {
+    state.anim = 'rev'         // 从详情返回主视图：反向
+  } else {
+    state.anim = 'next'
+  }
   state.view = opts.view
   if (opts.filter) state.filter[opts.view] = opts.filter
   // 学习计划：记录要查看的科目
@@ -111,6 +152,10 @@ function nextTab(dir) {
 function tapTab(id) {
   if (id === state.view) return
   keepScroll()
+  // 根据 Tab 顺序决定方向：往前(next)还是往后(rev)
+  const idxCur = TABS.findIndex((t) => t.id === state.view)
+  const idxNext = TABS.findIndex((t) => t.id === id)
+  state.anim = idxNext > idxCur ? 'next' : 'rev'
   state.view = id
   render()
 }
@@ -124,6 +169,7 @@ function keepScroll() {
 function renderPreservingView(target) {
   loadAll()
   state.view = target
+  state.anim = 'none'   // 刷新不播动画
   render()
 }
 
@@ -154,8 +200,10 @@ function refreshSW() {
 
 // 初始化
 loadAll()
+state.anim = 'none'   // 首屏不播动画
 bindCloudRerender(() => {
   if (document.visibilityState === 'hidden') return
   if (state.view === 'stats' || state.view === 'home') render()
 })
 render()
+state.anim = 'next'

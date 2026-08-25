@@ -399,6 +399,53 @@ body {
 .vocab-stat b { color: var(--ink); }
 .vocab-entry:active { opacity: .8; }
 
+/* ===== 页面切换过渡 ===== */
+.page {
+  will-change: transform, opacity;
+}
+/* 进入方向类 */
+.page-enter-next { animation: pageInNext .22s cubic-bezier(.22,.9,.28,1) both; }
+.page-enter-prev { animation: pageInPrev .22s cubic-bezier(.22,.9,.28,1) both; }
+.page-enter-up   { animation: pageInUp   .24s cubic-bezier(.22,.9,.28,1) both; }
+.page-leave-next { animation: pageOutNext .2s ease-in both; }
+.page-leave-prev { animation: pageOutPrev .2s ease-in both; }
+.page-leave-down { animation: pageOutDown .2s ease-in both; }
+@keyframes pageInNext {
+  from { transform: translateX(6%); opacity: .25; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes pageInPrev {
+  from { transform: translateX(-6%); opacity: .25; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes pageInUp {
+  from { transform: translateY(4%); opacity: .3; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes pageOutNext {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(-4%); opacity: 0; }
+}
+@keyframes pageOutPrev {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(4%); opacity: 0; }
+}
+@keyframes pageOutDown {
+  from { transform: translateY(0); opacity: 1; }
+  to   { transform: translateY(3%); opacity: 0; }
+}
+
+/* 列表项淡入 */
+.page .card { animation: cardFade .3s ease both; }
+.page .card:nth-child(2) { animation-delay: .02s; }
+.page .card:nth-child(3) { animation-delay: .04s; }
+.page .card:nth-child(4) { animation-delay: .06s; }
+.page .card:nth-child(5) { animation-delay: .08s; }
+@keyframes cardFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* 下拉刷新 */
 .pull-indicator {
   height: 0;
