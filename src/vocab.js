@@ -1,7 +1,10 @@
 // 六级核心高频词表（真题高频 + 常考核心）
 // 格式：[单词, 音标, 中文释义]，音标可为 '' 简化
-// 目标：约 400 词，覆盖考研英语中六级高频核心；可随时在文件里增删扩充
-export const VOCAB = [
+// 基底 + 扩充合并，自动去重（见文件尾部）
+import { EXTRA as EXTRA1 } from './vocab-extra.js'
+import { EXTRA as EXTRA2 } from './vocab-extra2.js'
+
+const BASE = [
   ['abandon', '', 'v. 放弃；抛弃'],
   ['ability', '', 'n. 能力；才能'],
   ['absorb', '', 'v. 吸收；使专心'],
@@ -630,9 +633,22 @@ export const VOCAB = [
   ['yield', '', 'v. 产生；屈服 n. 产量'],
 ]
 
-// 单词去重保护
-export const VOCAB_MAP = new Map()
-for (const [w] of VOCAB) {
-  if (!VOCAB_MAP.has(w)) VOCAB_MAP.set(w, true)
+// 合并基底 + 扩充，按单词去重
+const seen = new Set()
+const VOCAB_FULL = []
+for (const item of [...BASE, ...EXTRA1, ...EXTRA2]) {
+  if (!item || !item[0]) continue
+  const w = item[0]
+  if (seen.has(w)) continue
+  seen.add(w)
+  VOCAB_FULL.push(item)
 }
+
+// 目标词量约 2000：取排序稳定后的前 2000 个（基础词优先），其余留作扩展
+const TARGET = 2000
+const VOCAB = VOCAB_FULL.slice(0, TARGET)
+
+export { VOCAB } // 合并后的词表
+export const VOCAB_ALL = VOCAB_FULL  // 全量（含扩展，供以后使用）
+export const VOCAB_MAP = seen
 export const VOCAB_SIZE = VOCAB.length
