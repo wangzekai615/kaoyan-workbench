@@ -31,7 +31,6 @@ const state = { view: 'home', filter: {}, lastPos: null }
 function render() {
   const v = state.view
   let html = ''
-  useEffectCleanup()
   switch (v) {
     case 'home': html = homeHTML(); break
     case 'plan': html = planHTML(state.subject || 'math'); break
