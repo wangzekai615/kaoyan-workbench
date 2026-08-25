@@ -69,38 +69,42 @@ export function notesHTML(filter = 'all') {
     <div class="modal-mask hidden" id="nb-modal">
       <div class="modal">
         <h2 id="nb-modal-title">新增错题</h2>
-        <div class="field">
-          <label>科目</label>
-          <select id="nb-subject">${SUBJECTS.map((s) => `<option value="${s.key}">${s.emoji} ${s.name}</option>`).join('')}</select>
-        </div>
-        <div class="field">
-          <label>类型</label>
-          <select id="nb-cat">${CATS.map((c) => `<option>${c}</option>`).join('')}</select>
-        </div>
-
-        <!-- 拍照 / 相册 -->
-        <div class="field">
-          <label>题目照片（可拍照或从相册选）</label>
-          <div class="img-pick">
-            <label class="btn ghost pick-btn">
-              📷 拍照
-              <input type="file" accept="image/*" capture="environment" id="nb-photo" hidden />
-            </label>
-            <label class="btn ghost pick-btn">
-              🖼 相册
-              <input type="file" accept="image/*" id="nb-album" hidden />
-            </label>
-            <button class="btn ghost pick-btn" id="nb-ocr" type="button" disabled>🔍 识别文字</button>
+        <div class="modal-body">
+          <div class="field">
+            <label>科目</label>
+            <select id="nb-subject">${SUBJECTS.map((s) => `<option value="${s.key}">${s.emoji} ${s.name}</option>`).join('')}</select>
           </div>
-          <div id="nb-preview" class="preview hidden"><img id="nb-preview-img" alt="预览" /><button class="btn danger" id="nb-preview-del">移除</button></div>
-          <div class="ocr-progress hidden" id="nb-ocr-prog">识别中 <span id="nb-ocr-pct">0%</span><div class="ocr-progbar"><i id="nb-ocr-bar"></i></div></div>
-        </div>
+          <div class="field">
+            <label>类型</label>
+            <select id="nb-cat">${CATS.map((c) => `<option>${c}</option>`).join('')}</select>
+          </div>
 
-        <div class="field"><label>标题</label><input id="nb-title" placeholder="如：极限的定义" /></div>
-        <div class="field"><label>内容（识别文字会自动填入，也可手写）</label><textarea id="nb-body" rows="4" placeholder="知识点 / 错因 / 解法"></textarea></div>
-        <div class="row">
-          <button class="btn ghost grow" id="nb-cancel">取消</button>
-          <button class="btn grow" id="nb-save" style="background:var(--accent)">保存</button>
+          <!-- 拍照 / 相册 -->
+          <div class="field">
+            <label>题目照片（可拍照或从相册选）</label>
+            <div class="img-pick">
+              <label class="btn ghost pick-btn">
+                📷 拍照
+                <input type="file" accept="image/*" capture="environment" id="nb-photo" hidden />
+              </label>
+              <label class="btn ghost pick-btn">
+                🖼 相册
+                <input type="file" accept="image/*" id="nb-album" hidden />
+              </label>
+              <button class="btn ghost pick-btn" id="nb-ocr" type="button" disabled>🔍 识别文字</button>
+            </div>
+            <div id="nb-preview" class="preview hidden"><img id="nb-preview-img" alt="预览" /><button class="btn danger" id="nb-preview-del">移除</button></div>
+            <div class="ocr-progress hidden" id="nb-ocr-prog">识别中 <span id="nb-ocr-pct">0%</span><div class="ocr-progbar"><i id="nb-ocr-bar"></i></div></div>
+          </div>
+
+          <div class="field"><label>标题</label><input id="nb-title" placeholder="如：极限的定义" /></div>
+          <div class="field"><label>内容（识别文字会自动填入，也可手写）</label><textarea id="nb-body" rows="4" placeholder="知识点 / 错因 / 解法"></textarea></div>
+        </div>
+        <div class="modal-actions">
+          <div class="row">
+            <button class="btn ghost grow" id="nb-cancel">取消</button>
+            <button class="btn grow" id="nb-save" style="background:var(--accent)">保存</button>
+          </div>
         </div>
       </div>
     </div>

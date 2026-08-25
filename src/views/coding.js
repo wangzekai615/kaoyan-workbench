@@ -130,22 +130,26 @@ export function codingHTML(filter = 'all') {
     <div class="modal-mask hidden" id="cd-modal">
       <div class="modal">
         <h2>记录一道题</h2>
-        <div class="row">
-          <div class="field grow"><label>来源</label>
-            <select id="cd-source">${SOURCES.map((s) => `<option>${s}</option>`).join('')}</select>
+        <div class="modal-body">
+          <div class="row">
+            <div class="field grow"><label>来源</label>
+              <select id="cd-source">${SOURCES.map((s) => `<option>${s}</option>`).join('')}</select>
+            </div>
+            <div class="field" style="width:88px;flex:none"><label>题号</label><input id="cd-pid" placeholder="1" inputmode="numeric" /></div>
           </div>
-          <div class="field" style="width:88px;flex:none"><label>题号</label><input id="cd-pid" placeholder="1" inputmode="numeric" /></div>
+          <div class="field"><label>题目</label><input id="cd-title" placeholder="如：两数之和" /></div>
+          <div class="field"><label>分类</label>
+            <select id="cd-tag">${TAGS.map((t) => `<option>${t}</option>`).join('')}</select>
+          </div>
+          <div class="field"><label>状态</label>
+            <select id="cd-status">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+          </div>
         </div>
-        <div class="field"><label>题目</label><input id="cd-title" placeholder="如：两数之和" /></div>
-        <div class="field"><label>分类</label>
-          <select id="cd-tag">${TAGS.map((t) => `<option>${t}</option>`).join('')}</select>
-        </div>
-        <div class="field"><label>状态</label>
-          <select id="cd-status">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
-        </div>
-        <div class="row">
-          <button class="btn ghost grow" id="cd-cancel">取消</button>
-          <button class="btn grow" id="cd-save" style="background:var(--accent)">保存</button>
+        <div class="modal-actions">
+          <div class="row">
+            <button class="btn ghost grow" id="cd-cancel">取消</button>
+            <button class="btn grow" id="cd-save" style="background:var(--accent)">保存</button>
+          </div>
         </div>
       </div>
     </div>
