@@ -55,9 +55,11 @@ export function homeHTML() {
           <span style="color:${s.color}">计划完成 ${donePct}%</span>
         </div>
         <div class="bar"><i style="width:${donePct}%;background:${s.color}"></i></div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);margin-top:5px">
           <span>${ratio.done}/${ratio.total} 项 · 今日完成 ${todayDone} 项</span>
-          <span class="${doneToday ? 'ok-chip' : ''}">${doneToday ? '✔ 今日已打卡' : '点击查看计划 →'}</span>
+          ${doneToday
+            ? `<span class="btn cancel-checkin" data-k="${s.key}" style="padding:3px 10px;font-size:11px;border-radius:999px">✕ 取消打卡</span>`
+            : `<span class="ok-chip">点击查看计划 →</span>`}
         </div>
       </div>
     </div>`
@@ -91,9 +93,21 @@ export function homeHTML() {
 
 export function homeBind(root, rerender) {
   root.addEventListener('click', (e) => {
+    // 点击「取消打卡」→ 确认后取消该科今日打卡
+    const cancelBtn = e.target.closest('.cancel-checkin')
+    if (cancelBtn) {
+      const key = cancelBtn.dataset.k
+      const subject = SUBJECTS.find((s) => s.key === key)
+      if (confirm(`取消「${subject ? subject.name : ''}」今天的打卡？`)) {
+        toggleCheckin(today(), key)
+        rerender({ view: 'home' })   // 整页重渲染，卡片状态 + 周视图圆点同步更新
+      }
+      return
+    }
+
     const card = e.target.closest('[data-k]')
-    if (card) {
-      // 点击科目卡片 → 进入该科学习计划
+    if (card && !e.target.closest('.cancel-checkin')) {
+      // 点击科目卡片（非取消按钮）→ 进入该科学习计划
       rerender({ view: 'plan', subject: card.dataset.k })
       return
     }

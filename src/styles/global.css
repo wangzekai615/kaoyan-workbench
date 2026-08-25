@@ -332,6 +332,17 @@ body {
 .task-t.done b { text-decoration: line-through; color: var(--muted); }
 .task-t .tip { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
 .ok-chip { color: var(--green); font-weight: 600; }
+.cancel-checkin {
+  background: #ffecee;
+  color: var(--accent-2);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 3px 10px;
+  font-size: 11px;
+  border-radius: 999px;
+}
+.cancel-checkin:active { opacity: .7; }
 
 /* 错题拍照 */
 .img-pick { display: flex; gap: 8px; flex-wrap: wrap; }
