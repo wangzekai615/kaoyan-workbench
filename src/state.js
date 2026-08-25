@@ -95,6 +95,12 @@ export function addNote(note) {
   persistAll()
 }
 
+// 生成图片 id（用 crypto 随机）
+export function newImgId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID()
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
+}
+
 export function updateNote(id, patch) {
   const i = state.notes.findIndex((n) => n.id === id)
   if (i >= 0) { state.notes[i] = { ...state.notes[i], ...patch }; persistAll() }

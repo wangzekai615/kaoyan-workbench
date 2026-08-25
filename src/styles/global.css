@@ -333,6 +333,27 @@ body {
 .task-t .tip { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
 .ok-chip { color: var(--green); font-weight: 600; }
 
+/* 错题拍照 */
+.img-pick { display: flex; gap: 8px; flex-wrap: wrap; }
+.pick-btn { display: inline-block !important; cursor: pointer; padding: 9px 12px; }
+.preview { margin-top: 8px; }
+.preview img, .note-img {
+  width: 100%; max-height: 220px; object-fit: cover;
+  border-radius: 10px; cursor: zoom-in;
+}
+.preview img { max-height: 260px; }
+.preview .btn { margin-top: 6px; }
+.note-imgbox { margin-bottom: 8px; }
+.ocr-progress { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.ocr-progbar {
+  height: 6px; border-radius: 999px; background: #eef0f6;
+  overflow: hidden; margin-top: 4px;
+}
+.ocr-progbar i {
+  display: block; height: 100%; background: linear-gradient(90deg, #5b6b8f, #ff9f43);
+  transition: width .2s; width: 0%;
+}
+
 /* 热力图 */
 .heatmap {
   display: grid;

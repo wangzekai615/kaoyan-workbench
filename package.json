@@ -13,5 +13,8 @@
   "devDependencies": {
     "gh-pages": "^6.1.1",
     "vite": "^5.4.2"
+  },
+  "dependencies": {
+    "tesseract.js": "^7.0.0"
   }
 }
