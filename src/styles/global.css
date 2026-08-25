@@ -271,9 +271,9 @@ body {
 .modal-mask {
   position: fixed; inset: 0;
   background: rgba(20, 24, 40, 0.45);
-  backdrop-filter: blur(2px);
   display: flex; align-items: flex-end; justify-content: center;
   z-index: 100;
+  /* 去掉 backdrop-filter：iOS Safari 上它会让 fixed 子元素的滚动/定位异常 */
 }
 .modal {
   width: 100%; max-width: 520px;
