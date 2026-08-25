@@ -18,7 +18,7 @@ try {
   out.textContent = '加载 worker...'
   const w = await Tesseract.createWorker('chi_sim+eng', 1, {
     workerPath: 'https://wangzekai615.github.io/kaoyan-workbench/vendor/ocr/worker.min.js',
-    corePath: 'https://wangzekai615.github.io/kaoyan-workbench/vendor/ocr/tesseract-core.js',
+    corePath: 'https://wangzekai615.github.io/kaoyan-workbench/vendor/ocr/tesseract-core-simd.wasm.js',
     langPath: 'https://wangzekai615.github.io/kaoyan-workbench/vendor/ocr/',
     logger: m => {},
   })

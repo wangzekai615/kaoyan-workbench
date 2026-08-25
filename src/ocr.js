@@ -8,7 +8,8 @@ const VENDOR = `${BASE}vendor/ocr/`
 // worker/core 需要完整 URL（Worker 里 importScripts 不接受根路径 /xxx）
 const ORIGIN = location.origin
 const WORKER_URL = ORIGIN + VENDOR + 'worker.min.js'
-const CORE_URL = ORIGIN + VENDOR + 'tesseract-core.js'
+// 核心用 SIMD 变体（内嵌 wasm），worker 按名字匹配 tesseract-core-*.wasm.js
+const CORE_URL = ORIGIN + VENDOR + 'tesseract-core-simd.wasm.js'
 const LANG_PATH = ORIGIN + VENDOR
 const LANGS = 'chi_sim+eng'   // 中文简体 + 英文
 
