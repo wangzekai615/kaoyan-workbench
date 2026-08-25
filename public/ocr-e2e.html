@@ -17,9 +17,9 @@ const url = URL.createObjectURL(blob)
 try {
   out.textContent = '加载 worker...'
   const w = await Tesseract.createWorker('chi_sim+eng', 1, {
-    workerPath: '/kaoyan-workbench/vendor/ocr/worker.min.js',
-    corePath: '/kaoyan-workbench/vendor/ocr/tesseract-core.js',
-    langPath: '/kaoyan-workbench/vendor/ocr/',
+    workerPath: 'https://wangzekai615.github.io/kaoyan-workbench/vendor/ocr/worker.min.js',
+    corePath: 'https://wangzekai615.github.io/kaoyan-workbench/vendor/ocr/tesseract-core.js',
+    langPath: 'https://wangzekai615.github.io/kaoyan-workbench/vendor/ocr/',
     logger: m => {},
   })
   out.textContent = '识别中...'

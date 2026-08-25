@@ -5,8 +5,11 @@ import { toast } from './utils.js'
 
 const BASE = import.meta.env.BASE_URL // /kaoyan-workbench/
 const VENDOR = `${BASE}vendor/ocr/`
-const WORKER_URL = VENDOR + 'worker.min.js'
-const CORE_URL = VENDOR + 'tesseract-core.js'
+// worker/core 需要完整 URL（Worker 里 importScripts 不接受根路径 /xxx）
+const ORIGIN = location.origin
+const WORKER_URL = ORIGIN + VENDOR + 'worker.min.js'
+const CORE_URL = ORIGIN + VENDOR + 'tesseract-core.js'
+const LANG_PATH = ORIGIN + VENDOR
 const LANGS = 'chi_sim+eng'   // 中文简体 + 英文
 
 let workerPromise = null
@@ -17,7 +20,7 @@ function getWorker() {
     workerPromise = createWorker(LANGS, 1, {
       workerPath: WORKER_URL,
       corePath: CORE_URL,
-      langPath: VENDOR,
+      langPath: LANG_PATH,
       logger: () => {},
     })
   }
