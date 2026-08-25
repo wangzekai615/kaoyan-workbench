@@ -4,6 +4,8 @@ import { $, esc, today } from '../utils.js'
 import { state, toggleTask, taskId, isTaskDone } from '../state.js'
 import { getPlan, CATEGORY_TIPS, currentStageIndex } from '../plans.js'
 import { SUBJECTS } from '../config.js'
+import { getSettings, remainingDays, newWordsForDate, reviewWordsForDate, VOCAB_SIZE } from '../vocabPlan.js'
+import { EXAM_DATE } from '../config.js'
 
 export function planHTML(subjectKey) {
   const subj = SUBJECTS.find((s) => s.key === subjectKey)
@@ -44,6 +46,32 @@ export function planHTML(subjectKey) {
     })
     .join('')
 
+  // 英语专属：记单词入口卡
+  let vocabCard = ''
+  if (subjectKey === 'english') {
+    const set = getSettings()
+    const rDays = remainingDays(EXAM_DATE)
+    const todayStr = today()
+    let vocabBrief = ''
+    if (set && set.startDate) {
+      const nw = newWordsForDate(todayStr, set.startDate, set.newPerDay)
+      const rw = reviewWordsForDate(todayStr, set.startDate, set.newPerDay)
+      vocabBrief = `今日新学 <b>${nw.length}</b> 词 · 复习 <b>${rw.length}</b> 词`
+    } else {
+      vocabBrief = `还没有设置 · 距考研还有 ${rDays} 天`
+    }
+    vocabCard = `
+      <div class="card vocab-entry" id="vocab-entry" style="cursor:pointer;border:2px solid var(--accent)">
+        <div style="display:flex;align-items:center;gap:12px;justify-content:space-between">
+          <div>
+            <div style="font-weight:800;font-size:16px">📚 六级核心单词</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px">${vocabBrief}</div>
+          </div>
+          <span class="badge" style="background:var(--accent);color:#fff;border:none">去背词 →</span>
+        </div>
+      </div>`
+  }
+
   return `
   <div class="page no-nav">
     <div class="topbar">
@@ -51,6 +79,8 @@ export function planHTML(subjectKey) {
       <h1 style="font-size:17px">${subj.emoji} ${subj.name} · 学习计划</h1>
       <span class="badge">第 ${cur + 1} 阶段</span>
     </div>
+
+    ${vocabCard}
 
     <div class="card" style="margin-top:4px">
       <div style="font-size:13px;color:var(--muted)">${tip}</div>
@@ -67,6 +97,9 @@ export function planBind(root, rerender) {
   root.addEventListener('click', (e) => {
     const back = e.target.closest('#plan-back')
     if (back) { rerender({ view: 'home' }); return }
+
+    const vocabEntry = e.target.closest('#vocab-entry')
+    if (vocabEntry) { rerender({ view: 'vocab' }); return }
 
     const row = e.target.closest('.task-row')
     if (row) {

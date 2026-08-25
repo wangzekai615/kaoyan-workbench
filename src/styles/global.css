@@ -354,6 +354,27 @@ body {
   transition: width .2s; width: 0%;
 }
 
+/* 单词 */
+.word-list { padding: 0 12px 12px; }
+.word-card {
+  background: var(--card);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin: 0 0 10px;
+  border-left: 4px solid var(--accent);
+}
+.word-card.review { border-left-color: #4a7dff; }
+.word-en { font-size: 18px; font-weight: 800; letter-spacing: .3px; }
+.word-cn { font-size: 14px; color: #454a5a; margin-top: 5px; line-height: 1.5; }
+.mastered-btn.on { background: var(--green) !important; color: #fff !important; border-color: var(--green) !important; }
+.vocab-stat {
+  display: flex; gap: 14px; flex-wrap: wrap;
+  font-size: 12px; color: var(--muted); margin-top: 8px;
+}
+.vocab-stat b { color: var(--ink); }
+.vocab-entry:active { opacity: .8; }
+
 /* 热力图 */
 .heatmap {
   display: grid;
