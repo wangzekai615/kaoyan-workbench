@@ -2,6 +2,7 @@
 import './styles/global.css'
 import { loadAll, bindCloudRerender } from './state.js'
 import { homeHTML, homeBind } from './views/home.js'
+import { planHTML, planBind } from './views/plan.js'
 import { timerHTML, timerBind } from './views/timer.js'
 import { notesHTML, notesBind } from './views/notes.js'
 import { codingHTML, codingBind } from './views/coding.js'
@@ -31,6 +32,7 @@ function render() {
   useEffectCleanup()
   switch (v) {
     case 'home': html = homeHTML(); break
+    case 'plan': html = planHTML(state.subject || 'math'); break
     case 'timer': html = timerHTML(); break
     case 'notes': html = notesHTML(state.filter.notes); break
     case 'coding': html = codingHTML(state.filter.coding); break
@@ -45,7 +47,8 @@ function render() {
 
   bindNav(root)
   switch (v) {
-    case 'home': homeBind(root); break
+    case 'home': homeBind(root, (next) => goto(next)); break
+    case 'plan': planBind(root, (next) => goto(next)); break
     case 'timer': timerBind(root); break
     case 'notes': notesBind(root, (next) => goto(next)); break
     case 'coding': codingBind(root, (next) => goto(next)); break
@@ -57,6 +60,8 @@ function render() {
 }
 
 function navHTML() {
+  // 计划详情页隐藏底部导航（返回首页即可）
+  if (state.view === 'plan') return ''
   return `<nav class="bottom-nav">${TABS.map((t) => `
     <button data-tab="${t.id}" class="${state.view === t.id ? 'active' : ''}">
       <span class="ic">${t.icon}</span>

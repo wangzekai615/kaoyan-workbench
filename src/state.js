@@ -2,6 +2,7 @@
 import { loadJSON, saveJSON, uniqueDates } from './store.js'
 import { STORE_KEYS, SUBJECTS, INIT_PLAN } from './config.js'
 import { today, addDays } from './utils.js'
+import { getPlan } from './plans.js'
 import { cloudInit, cloudSync } from './cloud.js'
 
 export const state = {
@@ -10,6 +11,7 @@ export const state = {
   notes: [],
   coding: [],
   timerHist: [],           // { date, n, min }
+  taskDone: {},            // { subjectKey: { taskId: true } } 学习计划任务完成记录
   theme: 'light',
 }
 
@@ -19,6 +21,8 @@ export function loadAll() {
   state.notes = loadJSON(STORE_KEYS.notes, []) || []
   state.coding = loadJSON(STORE_KEYS.coding, []) || []
   state.timerHist = loadJSON(STORE_KEYS.timer_history, []) || []
+  // 学习计划进度：任务按 id 记录是否完成
+  state.taskDone = loadJSON(STORE_KEYS.taskDone, {}) || {}
   state.theme = loadJSON('kyw_theme', 'light') || 'light'
 }
 
@@ -28,6 +32,7 @@ export function persistAll() {
   saveJSON(STORE_KEYS.notes, state.notes)
   saveJSON(STORE_KEYS.coding, state.coding)
   saveJSON(STORE_KEYS.timer_history, state.timerHist)
+  saveJSON(STORE_KEYS.taskDone, state.taskDone)
   saveJSON('kyw_theme', state.theme)
   syncCloud()
 }
@@ -48,6 +53,41 @@ export function toggleCheckin(date, key) {
     state.checkins[date][key] = true
   }
   persistAll()
+}
+
+// ---------- 学习计划任务打卡 ----------
+// 任务 ID：由科目 + 阶段 + 任务下标生成，保证稳定
+export function taskId(subject, stageIdx, taskIdx) {
+  return `${subject}-s${stageIdx}-t${taskIdx}`
+}
+
+// 标记某科某阶段第 taskIdx 个任务完成/取消
+// 只要今天完成了该科 ≥1 项任务 → 自动为该科今日打卡（每天都算“学了这科”）
+export function toggleTask(subject, stageIdx, taskIdx) {
+  const id = taskId(subject, stageIdx, taskIdx)
+  if (!state.taskDone[subject]) state.taskDone[subject] = {}
+  if (state.taskDone[subject][id]) {
+    delete state.taskDone[subject][id]
+  } else {
+    state.taskDone[subject][id] = true
+  }
+  // 清理空对象
+  if (!Object.keys(state.taskDone[subject]).length) delete state.taskDone[subject]
+
+  // 该科今天还有已完成的任务 → 自动今日打卡；一个都没有了 → 取消今日该科打卡
+  const hasDoneToday = !!state.taskDone[subject] && Object.keys(state.taskDone[subject]).length > 0
+  if (!state.checkins[today()]) state.checkins[today()] = {}
+  if (hasDoneToday) {
+    state.checkins[today()][subject] = true
+  } else {
+    delete state.checkins[today()][subject]
+    if (!Object.keys(state.checkins[today()]).length) delete state.checkins[today()]
+  }
+  persistAll()
+}
+
+export function isTaskDone(subject, stageIdx, taskIdx) {
+  return !!state.taskDone[subject]?.[taskId(subject, stageIdx, taskIdx)]
 }
 
 export function addNote(note) {
@@ -128,5 +168,6 @@ function persistLocalOnly() {
   saveJSON(STORE_KEYS.notes, state.notes)
   saveJSON(STORE_KEYS.coding, state.coding)
   saveJSON(STORE_KEYS.timer_history, state.timerHist)
+  saveJSON(STORE_KEYS.taskDone, state.taskDone)
 }
 export function initCloud() { cloudInit() }

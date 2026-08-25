@@ -1,9 +1,24 @@
 // 首页：倒计时 + 今日打卡 + 科目进度
 import { $, esc, today, last7, daysUntil } from '../utils.js'
-import { state, toggleCheckin, todayProgress } from '../state.js'
+import { state, toggleCheckin, todayProgress, isTaskDone } from '../state.js'
 import { SUBJECTS, EXAM_DATE, EXAM_DATE_CN } from '../config.js'
+import { getPlan } from '../plans.js'
 
 const fmtDate = (d) => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+
+// 某科目的计划总完成度（跨阶段）
+function subjectDoneRatio(subjKey) {
+  const plan = getPlan(subjKey)
+  if (!plan) return { done: 0, total: 0 }
+  let done = 0, total = 0
+  plan.stages.forEach((st, si) => {
+    st.tasks.forEach((_, ti) => {
+      total++
+      if (isTaskDone(subjKey, si, ti)) done++
+    })
+  })
+  return { done, total }
+}
 
 export function homeHTML() {
   const days = daysUntil(EXAM_DATE)
@@ -27,18 +42,24 @@ export function homeHTML() {
   const subjects = SUBJECTS.map((s) => {
     const p = state.plans[s.key] ?? 0
     const doneToday = !!(state.checkins[t] || {})[s.key]
-    return `<div class="card subject-card">
+    const mut = getPlan(s.key)
+    const ratio = subjectDoneRatio(s.key)
+    const donePct = mut && ratio.total ? Math.round((ratio.done / ratio.total) * 100) : 0
+    // 今日在该科计划里完成的任务数
+    const todayDone = state.taskDone[s.key] ? Object.keys(state.taskDone[s.key]).length : 0
+    return `<div class="card subject-card" data-k="${s.key}" style="cursor:pointer">
       <div class="swatch" style="background:${s.color}22;color:${s.color}">${s.emoji}</div>
       <div class="grow">
         <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600">
           <span>${s.name}</span>
-          <span style="color:${s.color}">${p}%</span>
+          <span style="color:${s.color}">计划完成 ${donePct}%</span>
         </div>
-        <div class="bar"><i style="width:${p}%;background:${s.color}"></i></div>
+        <div class="bar"><i style="width:${donePct}%;background:${s.color}"></i></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px">
+          <span>${ratio.done}/${ratio.total} 项 · 今日完成 ${todayDone} 项</span>
+          <span class="${doneToday ? 'ok-chip' : ''}">${doneToday ? '✔ 今日已打卡' : '点击查看计划 →'}</span>
+        </div>
       </div>
-      <button class="btn ${doneToday ? 'ghost' : 'accent'}" data-k="${s.key}" style="padding:8px 12px;font-size:13px;border-radius:999px">
-        ${doneToday ? '✓ 已打卡' : '打卡'}
-      </button>
     </div>`
   }).join('')
 
@@ -68,24 +89,13 @@ export function homeHTML() {
   </div>`
 }
 
-export function homeBind(root) {
+export function homeBind(root, rerender) {
   root.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-k]')
-    if (!btn) return
-    const key = btn.dataset.k
-    toggleCheckin(today(), key)
-    const card = btn.closest('.subject-card')
-    const done = !!state.checkins[today()]?.[key]
-    btn.className = `btn ${done ? 'ghost' : 'accent'}`
-    btn.textContent = done ? '✓ 已打卡' : '打卡'
-    // 更新周视图小圆点
-    const seven = last7()
-    const idx = seven.findIndex((x) => x.str === today())
-    const cell = $('.weekview').children[idx]
-    const dot = cell ? cell.querySelector('.dot') : null
-    if (dot) {
-      const any = !!state.checkins[today()] && Object.keys(state.checkins[today()]).length
-      dot.className = 'dot' + (any ? '' : ' blank')
+    const card = e.target.closest('[data-k]')
+    if (card) {
+      // 点击科目卡片 → 进入该科学习计划
+      rerender({ view: 'plan', subject: card.dataset.k })
+      return
     }
   })
 }

@@ -1,7 +1,8 @@
 // 统计：打卡热力、科目进度分布、刷题分布、番茄总数
-import { state } from '../state.js'
+import { state, isTaskDone } from '../state.js'
 import { SUBJECTS, EXAM_DATE, EXAM_DATE_CN } from '../config.js'
 import { daysUntil } from '../utils.js'
+import { getPlan } from '../plans.js'
 
 export function statsHTML() {
   const days = daysUntil(EXAM_DATE)
@@ -27,11 +28,23 @@ export function statsHTML() {
   const totalMin = state.timerHist.reduce((sum, r) => sum + r.min, 0)
 
   const subjectBars = SUBJECTS.map((s) => {
+    // 计划完成度：按学习计划的任务完成比例（比 percent 更贴切）
+    const plan = getPlan(s.key)
+    let done = 0, total = 0
+    if (plan) {
+      plan.stages.forEach((st, si) => {
+        st.tasks.forEach((_, ti) => {
+          total++
+          if (isTaskDone(s.key, si, ti)) done++
+        })
+      })
+    }
     const p = state.plans[s.key] ?? 0
+    const pct = total ? Math.round((done / total) * 100) : p
     return `<div class="bar-row">
       <span class="lk">${s.emoji} ${s.name}</span>
-      <div class="track"><i style="width:${p}%;background:${s.color}"></i></div>
-      <span style="width:44px;text-align:right;color:var(--muted);font-size:12px">${p}%</span>
+      <div class="track"><i style="width:${pct}%;background:${s.color}"></i></div>
+      <span style="width:44px;text-align:right;color:var(--muted);font-size:12px">${pct}%</span>
     </div>`
   }).join('')
 

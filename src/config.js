@@ -38,6 +38,7 @@ export const STORE_KEYS = {
   notes: 'kyw_notes',          // [{ id, subject, title, body, cat, ts }]
   coding: 'kyw_coding',        // [{ id, date, pid, title, tag, status, ts }]
   sets: 'kyw_timer_history',   // [{ date, n, min }]
+  taskDone: 'kyw_taskdone',    // { [subjectKey]: { [taskId]: true } } 学习计划任务完成
   started: 'kyw_first_use',
 }
 
