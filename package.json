@@ -1,0 +1,17 @@
+{
+  "name": "kaoyan-workbench",
+  "private": true,
+  "version": "1.0.0",
+  "description": "考研上岸工作台 —— 个人学习计划、打卡、番茄钟、错题本与刷题记录（PWA）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "vite build && gh-pages -d dist"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.1.1",
+    "vite": "^5.4.2"
+  }
+}
