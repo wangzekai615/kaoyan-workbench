@@ -15,6 +15,8 @@ const LANGS = 'chi_sim+eng'   // 中文简体 + 英文
 
 let workerPromise = null
 let busy = false
+// 当前进度回调（每次识别时设置，worker logger 内调用）
+let progressCb = null
 
 function getWorker() {
   if (!workerPromise) {
@@ -23,7 +25,12 @@ function getWorker() {
       corePath: CORE_URL,
       langPath: LANG_PATH,
       workerBlobURL: false, // 直接用完整 URL 建 Worker，避免 blob worker 的 importScripts 问题
-      logger: () => {},
+      // v7 用法：进度只能通过 logger 回调（运行在主线程，不会 postMessage 进 worker）
+      logger: (m) => {
+        if (m && m.status === 'recognizing text') {
+          progressCb?.(Math.round((m.progress || 0) * 100))
+        }
+      },
     })
   }
   return workerPromise
@@ -36,15 +43,14 @@ export async function ocrImage(image, onProgress) {
     const worker = await getWorker()
     if (busy) { toast('有任务在识别中，稍候'); return null }
     busy = true
-    const res = await worker.recognize(image, {}, {
-      onprogress: ({ status, progress }) => {
-        if (status === 'recognizing text') onProgress?.(Math.round(progress * 100))
-      },
-    })
+    progressCb = onProgress || null
+    const res = await worker.recognize(image, {}, { text: true })  // 第三参是识别选项，不是回调
     busy = false
+    progressCb = null
     return (res.data && res.data.text) ? res.data.text.trim() : ''
   } catch (e) {
     busy = false
+    progressCb = null
     console.error('OCR 失败', e)
     toast('识别失败，请检查网络后重试')
     return null
