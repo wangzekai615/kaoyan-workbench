@@ -66,6 +66,14 @@ function render() {
     const newRoot = document.createElement('div')
     newRoot.innerHTML = html.trim() ? html : '<div class="page"></div>'
     const pageEl = newRoot.querySelector('.page') || newRoot.children[0]
+
+    // 关键：把弹窗从 .page 中剥离，挂到 #app 顶层（nav 之后）
+    // 否则 fixed 弹窗受 .page(overflow+will-change) 层叠上下文限制，盖不住导航
+    const mask = pageEl ? pageEl.querySelector('.modal-mask') : null
+    if (mask) {
+      mask.classList.add('modal-mask-top')   // 标记顶层弹窗
+      pageEl.removeChild(mask)
+    }
     if (pageEl) {
       const enterClass = anim === 'up' ? 'page-enter-up' : (anim === 'rev' ? 'page-enter-prev' : 'page-enter-next')
       pageEl.classList.add(enterClass)
@@ -74,6 +82,8 @@ function render() {
     if (state.lastPos !== null) pageEl && (pageEl.scrollTop = state.lastPos)
 
     app.prepend(newRoot.children[0] || newRoot)
+    // 弹窗追加到 #app 末尾 → 在导航之后，覆盖导航
+    if (mask) app.appendChild(mask)
     const root = app
 
     bindNav(root)

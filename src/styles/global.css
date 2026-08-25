@@ -89,10 +89,9 @@ body {
   background: #fdfdfe;
   border-top: 1px solid var(--line);
   display: flex;
+  /* 不要在此层加 transform/will-change：会改变层叠上下文，
+     可能让导航盖住本应在其之上的弹窗(modal z-index 999)。 */
   z-index: 50;
-  /* 强制独立合成层，避免移动端 fixed 随内容滚动 */
-  transform: translateZ(0);
-  will-change: transform;
 }
 .bottom-nav button {
   flex: 1;
@@ -272,7 +271,7 @@ body {
   position: fixed; inset: 0;
   background: rgba(20, 24, 40, 0.45);
   display: flex; align-items: flex-end; justify-content: center;
-  z-index: 100;
+  z-index: 999;   /* 远超导航，确保盖住所有页面层 */
   /* 去掉 backdrop-filter：iOS Safari 上它会让 fixed 子元素的滚动/定位异常 */
 }
 .modal {
@@ -445,9 +444,19 @@ body {
 .vocab-entry:active { opacity: .8; }
 
 /* ===== 页面切换过渡 ===== */
-.page {
-  will-change: transform, opacity;
+/* 注意：.page 不能设 will-change/transform 常驻，否则内部 fixed 弹窗会被锁进它的层叠上下文，
+  盖不住外层的底部导航。动画只在 .page-enter-*/ .page-leave-* 上临时生效。 */
+
+/* 顶层弹窗（已从 .page 剥离，挂在 #app 末尾）：固定定位，必须盖住底栏 */
+.modal-mask-top {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
+
 /* 进入方向类 */
 .page-enter-next { animation: pageInNext .22s cubic-bezier(.22,.9,.28,1) both; }
 .page-enter-prev { animation: pageInPrev .22s cubic-bezier(.22,.9,.28,1) both; }
