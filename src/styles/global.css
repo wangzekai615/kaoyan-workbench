@@ -375,6 +375,29 @@ body {
 .vocab-stat b { color: var(--ink); }
 .vocab-entry:active { opacity: .8; }
 
+/* 下拉刷新 */
+.pull-indicator {
+  height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  transition: height .15s ease;
+  flex-shrink: 0;
+}
+.page { transition: transform .18s ease, padding .18s ease; }
+.pull-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--line);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+}
+.pull-spinner.spin { animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg) } }
+
 /* 热力图 */
 .heatmap {
   display: grid;

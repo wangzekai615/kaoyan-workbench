@@ -9,6 +9,7 @@ import { notesHTML, notesBind } from './views/notes.js'
 import { codingHTML, codingBind } from './views/coding.js'
 import { statsHTML, statsBind } from './views/stats.js'
 import { swipeTab } from './swipe.js'
+import { attachPullRefresh } from './pullRefresh.js'
 
 const app = document.getElementById('app')
 
@@ -59,6 +60,21 @@ function render() {
   }
   swipeTab(root, (dir) => tapTab(nextTab(dir)))
 
+  // 下拉刷新：所有带 .page 的视图都可下拉重载当前页
+  const p = root.querySelector('.page')
+  if (p && v !== 'timer') {
+    attachPullRefresh(p, (done) => {
+      // 重新 loadAll + 重渲染当前视图（保持用户所在位置）
+      const target = v
+      keepScroll()
+      setTimeout(() => {
+        renderPreservingView(target)
+        done()
+        if (navigator.vibrate) navigator.vibrate(30)
+      }, 350)
+    })
+  }
+
   return root
 }
 
@@ -103,6 +119,13 @@ function tapTab(id) {
 function keepScroll() {
   const page = app.querySelector('.page')
   if (page) state.lastPos = page.scrollTop
+}
+
+// 下拉刷新：重新加载本地数据并重渲染当前视图（不切换 Tab）
+function renderPreservingView(target) {
+  loadAll()
+  state.view = target
+  render()
 }
 
 // 每次重渲染前清理子视图绑定的计时器等副作用
