@@ -67,11 +67,11 @@ function render() {
       // 重新 loadAll + 重渲染当前视图（保持用户所在位置）
       const target = v
       keepScroll()
-      setTimeout(() => {
+      refreshSW().then(() => {
         renderPreservingView(target)
         done()
         if (navigator.vibrate) navigator.vibrate(30)
-      }, 350)
+      })
     })
   }
 
@@ -128,9 +128,30 @@ function renderPreservingView(target) {
   render()
 }
 
-// 每次重渲染前清理子视图绑定的计时器等副作用
-function useEffectCleanup() {}
-// 番茄钟的 setInterval 在重渲染后自然失效（DOM 被替换）
+// 下拉刷新时：检查 Service Worker 是否有新版，若有则整页重新加载拿最新代码
+function refreshSW() {
+  return new Promise((resolve) => {
+    if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
+      setTimeout(resolve, 250); return
+    }
+    let reloaded = false
+    navigator.serviceWorker.ready
+      .then((reg) => reg.update())
+      .then(() => listener())
+      .catch(() => resolve())
+
+    function listener() {
+      // 初次 update 后，检查是否有新 SW 已 activate
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloaded) return
+        reloaded = true
+        window.location.reload()   // 新 SW 接管 → 重载拿最新 bundle
+      })
+      // 给 800ms 观察 controllerchange；没有则视为无新版，仅本地重渲染
+      setTimeout(() => { if (!reloaded) resolve() }, 800)
+    }
+  })
+}
 
 // 初始化
 loadAll()
