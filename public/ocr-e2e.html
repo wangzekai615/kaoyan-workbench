@@ -3,7 +3,7 @@
 <canvas id="c" width="760" height="280"></canvas>
 <pre id="out">RUNNING</pre>
 <script type="module">
-import { createWorker } from '/kaoyan-workbench/vendor/ocr/tesseract.esm.min.js'  // 会被部署为 vendor 内
+import Tesseract from '/kaoyan-workbench/vendor/ocr/tesseract.esm.min.js'  // 会被部署为 vendor 内
 const out = document.getElementById('out')
 const c = document.getElementById('c')
 const ctx = c.getContext('2d')
@@ -16,7 +16,7 @@ const blob = await new Promise(r => c.toBlob(r, 'image/png'))
 const url = URL.createObjectURL(blob)
 try {
   out.textContent = '加载 worker...'
-  const w = await createWorker('chi_sim+eng', 1, {
+  const w = await Tesseract.createWorker('chi_sim+eng', 1, {
     workerPath: '/kaoyan-workbench/vendor/ocr/worker.min.js',
     corePath: '/kaoyan-workbench/vendor/ocr/tesseract-core.js',
     langPath: '/kaoyan-workbench/vendor/ocr/',
