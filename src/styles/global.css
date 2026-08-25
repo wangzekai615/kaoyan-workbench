@@ -282,6 +282,8 @@ body {
   display: flex;
   flex-direction: column;
   max-height: 88vh;
+  /* 键盘弹起时浏览器会把弹窗顶起，这里给个兜底：不超过可用布局视口高度 */
+  max-height: calc(var(--modal-maxh, 88vh));
 }
 .modal h2 {
   margin: 0;
@@ -296,10 +298,13 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 .modal .modal-actions {
-  padding: 12px 18px calc(12px + var(--safe-bottom));
+  padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 34px));
   flex-shrink: 0;
   border-top: 1px solid var(--line);
   background: #fff;
+  /* iOS 键盘弹出时，保证按钮区位于可视区域底部之上 */
+  position: relative;
+  z-index: 1;
 }
 .modal .row { display: flex; gap: 10px; }
 .modal .row .fieldgrow { flex: 1; }

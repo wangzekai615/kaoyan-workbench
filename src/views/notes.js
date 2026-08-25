@@ -5,6 +5,7 @@ import { SUBJECTS } from '../config.js'
 import { saveImage, deleteImage, getImage, compressImage } from '../imgstore.js'
 import { ocrImage } from '../ocr.js'
 import { ICONS } from '../icons.js'
+import { fitModalMask, teardownModalFit } from '../modalViewport.js'
 
 const CATS = ['错题', '笔记', '公式', '易错点']
 
@@ -151,8 +152,12 @@ export function notesBind(root, rerender) {
       })
     }
     modal.classList.remove('hidden')
+    fitModalMask(modal)
   }
-  function closeModal() { modal.classList.add('hidden') }
+  function closeModal() {
+    modal.classList.add('hidden')
+    teardownModalFit()
+  }
 
   function resetPicker() {
     previewBox.classList.add('hidden')
