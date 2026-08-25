@@ -77,17 +77,22 @@ body {
 /* 底部导航 */
 .bottom-nav {
   position: fixed;
-  bottom: 0; left: 50%;
-  transform: translateX(-50%);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
   width: 100%;
   max-width: 520px;
   height: calc(var(--nav-h) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
+  /* 纯色背景（去掉 backdrop-filter，避免安卓 WebView 上 fixed 元素滚动抖动/脱离） */
+  background: #fdfdfe;
   border-top: 1px solid var(--line);
   display: flex;
   z-index: 50;
+  /* 强制独立合成层，避免移动端 fixed 随内容滚动 */
+  transform: translateZ(0);
+  will-change: transform;
 }
 .bottom-nav button {
   flex: 1;
