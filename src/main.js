@@ -62,6 +62,8 @@ function render() {
   setTimeout(() => {
     // 移除旧页面（不含 nav）
     app.querySelectorAll('.page').forEach((n) => n.remove())
+    // 清理可能残留的顶层弹窗（开弹窗时切页）
+    app.querySelectorAll('.modal-mask').forEach((m) => m.remove())
 
     const newRoot = document.createElement('div')
     newRoot.innerHTML = html.trim() ? html : '<div class="page"></div>'
@@ -119,7 +121,9 @@ function render() {
 function navHTML() {
   // 计划/背词详情页隐藏底部导航（返回即可）
   if (state.view === 'plan' || state.view === 'vocab') return ''
-  return `<nav class="bottom-nav">${TABS.map((t) => `
+  // 若有弹窗开着，新导航也应保持隐藏
+  const modalOpen = !!document.querySelector('.modal-mask.show')
+  return `<nav class="bottom-nav${modalOpen ? ' nav-hide' : ''}">${TABS.map((t) => `
     <button data-tab="${t.id}" class="${state.view === t.id ? 'active' : ''}">
       <span class="ic">${t.icon}</span>
       <span>${t.label}</span>

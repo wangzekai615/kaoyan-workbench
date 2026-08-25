@@ -92,6 +92,13 @@ body {
   /* 不要在此层加 transform/will-change：会改变层叠上下文，
      可能让导航盖住本应在其之上的弹窗(modal z-index 999)。 */
   z-index: 50;
+  /* 弹窗打开时滑出底栏（由弹窗工具控制 nav-hide 类） */
+  transition: transform .28s ease, opacity .28s ease;
+}
+.bottom-nav.nav-hide {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
 }
 .bottom-nav button {
   flex: 1;
@@ -273,6 +280,25 @@ body {
   display: flex; align-items: flex-end; justify-content: center;
   z-index: 999;   /* 远超导航，确保盖住所有页面层 */
   /* 去掉 backdrop-filter：iOS Safari 上它会让 fixed 子元素的滚动/定位异常 */
+  /* —— 弹窗过场动画 —— */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .28s ease, visibility .28s step-end;
+}
+.modal-mask.show {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .28s ease;
+}
+.modal-mask .modal {
+  transform: translateY(72px);
+  opacity: 0;
+  transition: transform .3s cubic-bezier(.2,.9,.3,1), opacity .3s ease;
+}
+.modal-mask.show .modal {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform .32s cubic-bezier(.2,.9,.3,1), opacity .32s ease;
 }
 .modal {
   width: 100%; max-width: 520px;
@@ -283,6 +309,8 @@ body {
   max-height: 88vh;
   /* 键盘弹起时浏览器会把弹窗顶起，这里给个兜底：不超过可用布局视口高度 */
   max-height: calc(var(--modal-maxh, 88vh));
+  /* 键盘弹出时禁用过渡，避免视觉跳动 */
+  will-change: transform, opacity;
 }
 .modal h2 {
   margin: 0;

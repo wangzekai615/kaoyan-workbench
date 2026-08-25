@@ -1,7 +1,7 @@
 // 刷题记录：力扣/牛客/其他，总览统计 + 本周分布 + 标签分布 + 待重做 + 记录增删筛选
 import { $, esc, today, toast } from '../utils.js'
 import { state, addCoding, delCoding } from '../state.js'
-import { fitModalMask, teardownModalFit } from '../modalViewport.js'
+import { openModalMask, closeModalMask } from '../modalViewport.js'
 
 const TAGS = ['数组', '链表', '树', '图', '动态规划', '贪心', '回溯', '字符串', '哈希', '其他']
 const STATUS = { todo: '待重做', ok: '已掌握', star: '⭐ 经典' }
@@ -163,12 +163,10 @@ export function codingBind(root, rerender) {
     return (active && active.dataset.filter) || 'all'
   }
   function open() {
-    $('#cd-modal', root).classList.remove('hidden')
-    fitModalMask($('#cd-modal', root))
+    openModalMask($('#cd-modal', root))
   }
   function close() {
-    $('#cd-modal', root).classList.add('hidden')
-    teardownModalFit()
+    closeModalMask($('#cd-modal', root))
   }
 
   root.addEventListener('click', (e) => {

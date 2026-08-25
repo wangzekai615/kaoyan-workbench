@@ -5,7 +5,7 @@ import { SUBJECTS } from '../config.js'
 import { saveImage, deleteImage, getImage, compressImage } from '../imgstore.js'
 import { ocrImage } from '../ocr.js'
 import { ICONS } from '../icons.js'
-import { fitModalMask, teardownModalFit } from '../modalViewport.js'
+import { openModalMask, closeModalMask } from '../modalViewport.js'
 
 const CATS = ['错题', '笔记', '公式', '易错点']
 
@@ -151,12 +151,10 @@ export function notesBind(root, rerender) {
         pendingImg = { imgId: note.imgId, existing: true }
       })
     }
-    modal.classList.remove('hidden')
-    fitModalMask(modal)
+    openModalMask(modal)
   }
   function closeModal() {
-    modal.classList.add('hidden')
-    teardownModalFit()
+    closeModalMask(modal)
   }
 
   function resetPicker() {
